@@ -1,0 +1,119 @@
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    margin: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+h1,
+h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+}
+
+label {
+    display: inline-block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+input,
+button {
+    padding: 10px 15px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+input#cardInput {
+    width: 300px;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+#errorMsg {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+h2+p#liveResult {
+    font-size: 1.2em;
+    padding: 10px;
+    background-color: #e6f7ff;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccebff;
+}
+
+#cardList {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+}
+
+#cardList li {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+#cardList li:last-child {
+    border-bottom: none;
+}
+
+h2+p#result {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+a {
+    color: #3498db;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+#rankingSection {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    background-color: white;
+}
+
+#rankingList {
+    list-style-type: decimal;
+    padding-left: 20px;
+}
+
+#rankingList li {
+    padding: 8px 0;
+    border-bottom: 1px dashed #eee;
+}
+
+#rankingList li:last-child {
+    border-bottom: none;
+}
