@@ -15,7 +15,50 @@ const cardsInfo = {
 const ALL_CARDS = Object.keys(cardsInfo).map(Number);
 let cardOrder = [];
 
-// --- ▼▼▼ ここからが変更箇所 ▼▼▼ ---
+// --- ▼▼▼ ここからがストップウォッチ機能の変更箇所 ▼▼▼ ---
+let timerInterval;
+let totalSeconds = 300; // 5分 = 300秒
+let isTimerRunning = false; // タイマーが作動中かどうかのフラグ
+
+function startStopwatch() {
+    // タイマーが既に動いている場合は何もしない
+    if (isTimerRunning) {
+        return;
+    }
+    isTimerRunning = true; // タイマーを開始状態にする
+    const stopwatchEl = document.getElementById('stopwatch');
+
+    timerInterval = setInterval(() => {
+        if (totalSeconds <= 0) {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            alert("5分が経過しました！");
+            stopwatchEl.textContent = "時間切れ";
+            return;
+        }
+
+        totalSeconds--;
+
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        stopwatchEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    }, 1000);
+}
+
+function resetStopwatch() {
+    clearInterval(timerInterval); // タイマーを停止
+    isTimerRunning = false; // タイマーを非作動状態にする
+    totalSeconds = 300;
+    const stopwatchEl = document.getElementById('stopwatch');
+    if (stopwatchEl) {
+        stopwatchEl.textContent = "5:00";
+    }
+}
+
+// --- ▲▲▲ ストップウォッチ機能の変更ここまで ▲▲▲ ---
+
 
 function addCard() {
     const input = document.getElementById('cardInput');
@@ -25,7 +68,6 @@ function addCard() {
     const cardStrings = input.value.split(',');
     const cardsToAdd = [];
 
-    // 1. 入力された全てのカード番号を検証する
     for (const str of cardStrings) {
         const val = parseInt(str.trim(), 10);
         if (isNaN(val) || val < 1 || val > 12) {
@@ -35,13 +77,11 @@ function addCard() {
         cardsToAdd.push(val);
     }
 
-    // 2. 今回の入力内でカードが重複していないかチェック
     if (new Set(cardsToAdd).size !== cardsToAdd.length) {
         errorMsg.textContent = "一度に同じカードを複数枚追加することはできません。";
         return;
     }
 
-    // 3. これまでに使用したカードと重複していないかチェック
     for (const val of cardsToAdd) {
         if (cardOrder.includes(val)) {
             errorMsg.textContent = `カード ${val} は既に使用済みです。`;
@@ -49,7 +89,6 @@ function addCard() {
         }
     }
 
-    // 4. 全てのチェックをパスしたらカードを追加
     for (const val of cardsToAdd) {
         if (val === 6) {
             const lastCard = cardOrder.length > 0 ? cardOrder[cardOrder.length - 1] : null;
@@ -68,59 +107,6 @@ function addCard() {
     input.value = "";
 }
 
-function findImprovedSolution(baseOrder, basePoint) {
-    if (baseOrder.length === 0) return null;
-    const baseStamina = 100;
-    const baseTime = 100;
-
-    for (let i = 0; i < 200; i++) {
-        let neighborOrder = [...baseOrder];
-        const action = Math.random();
-
-        if (action < 0.5 && neighborOrder.length > 0) { // 1枚のカードを変更
-            // まだ使われていないカードのリストを作成
-            const availableCards = ALL_CARDS.filter(card => !neighborOrder.includes(card));
-            if (availableCards.length === 0) continue; // 変更できるカードがない
-
-            const indexToChange = Math.floor(Math.random() * neighborOrder.length);
-            const newCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-            neighborOrder[indexToChange] = newCard;
-
-        } else { // 2枚のカードを入れ替え
-            if (neighborOrder.length > 1) {
-                const index1 = Math.floor(Math.random() * neighborOrder.length);
-                let index2 = Math.floor(Math.random() * neighborOrder.length);
-                while (index1 === index2) {
-                    index2 = Math.floor(Math.random() * neighborOrder.length);
-                }
-                [neighborOrder[index1], neighborOrder[index2]] = [neighborOrder[index2], neighborOrder[index1]];
-            }
-        }
-
-        let isValid = true;
-        for (let j = 1; j < neighborOrder.length; j++) {
-            if (neighborOrder[j] === 6 && neighborOrder[j - 1] !== 5) {
-                isValid = false;
-                break;
-            }
-        }
-        if (!isValid) continue;
-
-        const neighborScore = calculateTotal(neighborOrder);
-        let neighborStamina = baseStamina - neighborScore.stamina;
-        let neighborTime = baseTime - neighborScore.time;
-
-        if (neighborStamina >= 0 && neighborTime >= 0 && neighborScore.point > basePoint) {
-            return { order: neighborOrder, score: { point: neighborScore.point, stamina: neighborStamina, time: neighborTime } };
-        }
-    }
-    return null;
-}
-
-// --- ▲▲▲ ここまでが変更箇所 ▲▲▲ ---
-
-
-// (removeLastCard, resetAll, calculateTotal, updateLiveResult, finishInput, updateCardList, saveResult は変更なしのため省略)
 function removeLastCard() {
     const errorMsg = document.getElementById('errorMsg');
     if (cardOrder.length === 0) {
@@ -132,6 +118,7 @@ function removeLastCard() {
     updateCardList();
     updateLiveResult();
 }
+
 function resetAll() {
     cardOrder = [];
     updateCardList();
@@ -141,6 +128,7 @@ function resetAll() {
     document.getElementById('errorMsg').textContent = "";
     document.getElementById('suggestionSection').style.display = 'none';
     updateLiveResult();
+    resetStopwatch(); // 「やり直し」時にタイマーもリセット
 }
 
 function calculateTotal(order) {
@@ -181,7 +169,6 @@ function updateLiveResult() {
     }
 
     const spent = calculateTotal(cardOrder);
-
     let remainingStamina = baseStamina - spent.stamina;
     let remainingTime = baseTime - spent.time;
 
@@ -242,6 +229,54 @@ function finishInput() {
     cardOrder = [];
     updateCardList();
     updateLiveResult();
+}
+
+function findImprovedSolution(baseOrder, basePoint) {
+    if (baseOrder.length === 0) return null;
+    const baseStamina = 100;
+    const baseTime = 100;
+
+    for (let i = 0; i < 200; i++) {
+        let neighborOrder = [...baseOrder];
+        const action = Math.random();
+
+        if (action < 0.5 && neighborOrder.length > 0) {
+            const availableCards = ALL_CARDS.filter(card => !neighborOrder.includes(card));
+            if (availableCards.length === 0) continue;
+
+            const indexToChange = Math.floor(Math.random() * neighborOrder.length);
+            const newCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+            neighborOrder[indexToChange] = newCard;
+
+        } else {
+            if (neighborOrder.length > 1) {
+                const index1 = Math.floor(Math.random() * neighborOrder.length);
+                let index2 = Math.floor(Math.random() * neighborOrder.length);
+                while (index1 === index2) {
+                    index2 = Math.floor(Math.random() * neighborOrder.length);
+                }
+                [neighborOrder[index1], neighborOrder[index2]] = [neighborOrder[index2], neighborOrder[index1]];
+            }
+        }
+
+        let isValid = true;
+        for (let j = 1; j < neighborOrder.length; j++) {
+            if (neighborOrder[j] === 6 && neighborOrder[j - 1] !== 5) {
+                isValid = false;
+                break;
+            }
+        }
+        if (!isValid) continue;
+
+        const neighborScore = calculateTotal(neighborOrder);
+        let neighborStamina = baseStamina - neighborScore.stamina;
+        let neighborTime = baseTime - neighborScore.time;
+
+        if (neighborStamina >= 0 && neighborTime >= 0 && neighborScore.point > basePoint) {
+            return { order: neighborOrder, score: { point: neighborScore.point, stamina: neighborStamina, time: neighborTime } };
+        }
+    }
+    return null;
 }
 
 function updateCardList() {

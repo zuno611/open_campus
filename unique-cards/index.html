@@ -9,7 +9,19 @@
 </head>
 
 <body>
-    <label>名前: <input id="userName" type="text" autocomplete="off" /></label><br />
+    <div id="game-header">
+        <div id="timer-container">
+            <h2>制限時間</h2>
+            <p id="stopwatch">5:00</p>
+            <div id="timer-controls">
+                <button onclick="startStopwatch()">スタート</button>
+                <button onclick="resetStopwatch()">リセット</button>
+            </div>
+        </div>
+        <div id="name-container">
+            <label>名前: <input id="userName" type="text" autocomplete="off" /></label>
+        </div>
+    </div>
 
     <h1>カード入力</h1>
     <p>カード番号（1〜12）をカンマ区切り（例: 1,5,6）で入力し、「追加」ボタンを押してください。</p>
@@ -35,6 +47,7 @@
         <h2>コンピュータからの改善案</h2>
         <p id="suggestionText"></p>
     </div>
+
     <a href="ranking.html" target="_blank" style="display: block; margin-top: 20px;">ランキングページを見る</a>
 
     <script src="script.js"></script>
