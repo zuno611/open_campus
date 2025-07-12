@@ -15,17 +15,20 @@ const cardsInfo = {
 const ALL_CARDS = Object.keys(cardsInfo).map(Number);
 let cardOrder = [];
 
-// --- ▼▼▼ ここからがストップウォッチ機能の変更箇所 ▼▼▼ ---
+// ▼▼▼ ここからが変更箇所 ▼▼▼
+// 最適解のパターンを定義
+const OPTIMAL_SOLUTION = [1, 3, 5, 6, 4, 7, 10, 11];
+// ▲▲▲ ここまでが変更箇所 ▲▲▲
+
+
+// ストップウォッチ機能
 let timerInterval;
-let totalSeconds = 300; // 5分 = 300秒
-let isTimerRunning = false; // タイマーが作動中かどうかのフラグ
+let totalSeconds = 300;
+let isTimerRunning = false;
 
 function startStopwatch() {
-    // タイマーが既に動いている場合は何もしない
-    if (isTimerRunning) {
-        return;
-    }
-    isTimerRunning = true; // タイマーを開始状態にする
+    if (isTimerRunning) return;
+    isTimerRunning = true;
     const stopwatchEl = document.getElementById('stopwatch');
 
     timerInterval = setInterval(() => {
@@ -36,28 +39,22 @@ function startStopwatch() {
             stopwatchEl.textContent = "時間切れ";
             return;
         }
-
         totalSeconds--;
-
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
-
         stopwatchEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
     }, 1000);
 }
 
 function resetStopwatch() {
-    clearInterval(timerInterval); // タイマーを停止
-    isTimerRunning = false; // タイマーを非作動状態にする
+    clearInterval(timerInterval);
+    isTimerRunning = false;
     totalSeconds = 300;
     const stopwatchEl = document.getElementById('stopwatch');
     if (stopwatchEl) {
         stopwatchEl.textContent = "5:00";
     }
 }
-
-// --- ▲▲▲ ストップウォッチ機能の変更ここまで ▲▲▲ ---
 
 
 function addCard() {
@@ -128,7 +125,7 @@ function resetAll() {
     document.getElementById('errorMsg').textContent = "";
     document.getElementById('suggestionSection').style.display = 'none';
     updateLiveResult();
-    resetStopwatch(); // 「やり直し」時にタイマーもリセット
+    resetStopwatch();
 }
 
 function calculateTotal(order) {
@@ -206,25 +203,40 @@ function finishInput() {
 
     const resultCardsString = `使用したカード: [${cardOrder.join(', ')}]`;
 
+    // ▼▼▼ ここからが変更箇所 ▼▼▼
+    // プレイヤーのカードの並びが最適解と一致するかをチェック
+    const isOptimal = JSON.stringify(cardOrder) === JSON.stringify(OPTIMAL_SOLUTION);
+
     if (remainingStamina < 0 || remainingTime < 0) {
         resultEl.innerHTML = `【${name}さんの結果】<br>${resultCardsString}<br>制約条件違反のため、ポイントは0になります。(残り体力: ${remainingStamina}, 残り時間: ${remainingTime})`;
         finalPoint = 0;
     } else {
         resultEl.innerHTML = `【${name}さんの結果】<br>${resultCardsString}<br>ポイント: ${finalPoint} / 残り体力: ${remainingStamina} / 残り時間: ${remainingTime}`;
+        // 最適解だった場合、お祝いメッセージを追加
+        if (isOptimal) {
+            resultEl.innerHTML += `<br><br><strong style="color: #e67e22; font-size: 1.2em;">🎉 おめでとうございます！最適解を発見しました！ 🥳</strong>`;
+        }
     }
+    // ▲▲▲ ここまでが変更箇所 ▲▲▲
+
 
     saveResult(name, finalPoint, remainingStamina, remainingTime, [...cardOrder]);
 
     const suggestionSection = document.getElementById('suggestionSection');
     const suggestionText = document.getElementById('suggestionText');
-    const suggestion = findImprovedSolution([...cardOrder], finalPoint);
-
-    if (suggestion) {
-        suggestionText.innerHTML = `ちなみに、カードの順番を <strong>[${suggestion.order.join(', ')}]</strong> に変えると、<br>ポイントは <strong>${suggestion.score.point}</strong> になります！`;
-        suggestionSection.style.display = 'block';
+    // 最適解でない場合のみ改善案を表示する
+    if (!isOptimal) {
+        const suggestion = findImprovedSolution([...cardOrder], finalPoint);
+        if (suggestion) {
+            suggestionText.innerHTML = `ちなみに、カードの順番を <strong>[${suggestion.order.join(', ')}]</strong> に変えると、<br>ポイントは <strong>${suggestion.score.point}</strong> になります！`;
+            suggestionSection.style.display = 'block';
+        } else {
+            suggestionSection.style.display = 'none';
+        }
     } else {
-        suggestionSection.style.display = 'none';
+        suggestionSection.style.display = 'none'; // 最適解の場合は改善案を表示しない
     }
+
 
     cardOrder = [];
     updateCardList();
